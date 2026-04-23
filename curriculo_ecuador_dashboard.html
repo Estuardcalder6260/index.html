@@ -1,0 +1,970 @@
+```html
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Evolución del Currículo Ecuatoriano (1996–2023)</title>
+
+  <!-- React (CDN) + Babel para ejecutar JSX en un solo archivo -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Chart.js (ligero) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+  <style>
+    :root{
+      --bg: #0b1220;
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.68);
+      --line: rgba(255,255,255,0.10);
+      --blue: #4aa3ff;
+      --blue-2: #2f7dff;
+      --teal: #2dd4bf;
+      --violet: #a78bfa;
+      --shadow: 0 10px 30px rgba(0,0,0,0.35);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --gap: 16px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(900px 500px at 15% 20%, rgba(74,163,255,0.18), transparent 60%),
+        radial-gradient(900px 500px at 85% 10%, rgba(45,212,191,0.14), transparent 55%),
+        radial-gradient(900px 500px at 70% 85%, rgba(167,139,250,0.12), transparent 60%),
+        linear-gradient(180deg, #070b14 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    .container{
+      width: min(1200px, 92vw);
+      margin: 0 auto;
+      padding: 28px 0 60px;
+    }
+
+    /* Header */
+    .header{
+      display:flex;
+      gap: 18px;
+      align-items:flex-start;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .titleWrap{ max-width: 860px; }
+    .title{
+      font-size: clamp(22px, 3.2vw, 36px);
+      letter-spacing: 0.2px;
+      margin:0 0 6px;
+      line-height: 1.12;
+    }
+    .subtitle{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 14px;
+      white-space: pre-wrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      background: linear-gradient(180deg, rgba(74,163,255,0.16), rgba(74,163,255,0.06));
+      border: 1px solid rgba(74,163,255,0.26);
+      padding: 10px 12px;
+      border-radius: 999px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.18);
+      font-size: 12px;
+      color: rgba(255,255,255,0.85);
+      user-select:none;
+      white-space: nowrap;
+    }
+    .dot{
+      width:10px; height:10px; border-radius: 999px;
+      background: var(--blue);
+      box-shadow: 0 0 0 4px rgba(74,163,255,0.18);
+    }
+
+    /* Layout grid */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: var(--gap);
+      align-items: start;
+      margin-top: 16px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+      .header{ flex-direction: column; }
+      .pill{ align-self: flex-start; }
+    }
+
+    /* Panels */
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .panelHeader{
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.10);
+    }
+    .panelTitle{
+      margin:0;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+      color: rgba(255,255,255,0.86);
+      text-transform: uppercase;
+    }
+    .panelBody{ padding: 16px; }
+
+    /* Tabs */
+    .tabs{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+    .tab{
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.82);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor:pointer;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+      user-select:none;
+    }
+    .tab:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.20);
+    }
+    .tabActive{
+      background: linear-gradient(180deg, rgba(74,163,255,0.22), rgba(74,163,255,0.10));
+      border-color: rgba(74,163,255,0.35);
+    }
+
+    /* Timeline */
+    .timelineWrap{ padding: 12px 16px 6px; }
+    .timeline{
+      display:flex;
+      gap: 10px;
+      align-items: center;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      scrollbar-color: rgba(255,255,255,0.2) transparent;
+    }
+    .timeline::-webkit-scrollbar{ height: 10px; }
+    .timeline::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,0.12);
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+    .step{ min-width: 160px; }
+    .stepBtn{
+      width:100%;
+      text-align:left;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      cursor:pointer;
+      transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+    }
+    .stepBtn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.20);
+    }
+    .stepActive{
+      background: linear-gradient(180deg, rgba(47,125,255,0.25), rgba(47,125,255,0.10));
+      border-color: rgba(47,125,255,0.40);
+    }
+    .year{ font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .eventMini{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+      max-height: 32px;
+      overflow: hidden;
+    }
+
+    /* Cards */
+    .cards{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--gap);
+    }
+    @media (max-width: 680px){
+      .cards{ grid-template-columns: 1fr; }
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+      overflow: hidden;
+    }
+    .card:hover{
+      transform: translateY(-2px);
+      border-color: rgba(74,163,255,0.25);
+      background: linear-gradient(180deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03));
+    }
+    .cardLabel{
+      font-size: 12px;
+      color: rgba(255,255,255,0.70);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin: 0 0 8px;
+    }
+    .cardValue{
+      margin:0;
+      font-size: 14px;
+      line-height: 1.45;
+      color: rgba(255,255,255,0.92);
+      white-space: pre-wrap;
+    }
+
+    .badgeRow{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .badge{
+      font-size: 11px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.82);
+    }
+
+    /* Levels cards */
+    .levelCards{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .levelCard{
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      transition: transform 180ms ease, border-color 180ms ease;
+    }
+    .levelCard:hover{
+      transform: translateY(-2px);
+      border-color: rgba(45,212,191,0.28);
+    }
+    .levelName{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      gap: 10px;
+    }
+    .levelName strong{ font-size: 14px; }
+    .levelScope{
+      font-size: 11px;
+      color: rgba(255,255,255,0.70);
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      white-space: nowrap;
+    }
+    .levelDesc{
+      margin:0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+
+    /* Comparison table */
+    .tableWrap{
+      overflow:auto;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.03);
+    }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      min-width: 860px;
+    }
+    th, td{
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      vertical-align: top;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    th{
+      position: sticky;
+      top:0;
+      background: rgba(10,14,26,0.92);
+      backdrop-filter: blur(8px);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.45px;
+      color: rgba(255,255,255,0.80);
+    }
+    td{ color: rgba(255,255,255,0.86); }
+    td:first-child{
+      color: rgba(255,255,255,0.78);
+      width: 220px;
+      white-space: nowrap;
+    }
+
+    /* Summary */
+    .summary{
+      margin: 0;
+      color: rgba(255,255,255,0.78);
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .callout{
+      border: 1px solid rgba(74,163,255,0.20);
+      background: linear-gradient(180deg, rgba(74,163,255,0.12), rgba(74,163,255,0.05));
+      padding: 12px 12px;
+      border-radius: 14px;
+    }
+    .calloutTitle{
+      margin: 0 0 6px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: rgba(255,255,255,0.78);
+    }
+
+    /* Charts */
+    .chartsGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
+    }
+    @media (max-width: 980px){
+      .chartsGrid{ grid-template-columns: 1fr; }
+    }
+    .chartBox{
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .chartTitle{
+      margin: 0 0 8px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: rgba(255,255,255,0.78);
+    }
+    canvas{ width: 100% !important; height: 260px !important; }
+    .note{
+      margin-top: 10px;
+      color: rgba(255,255,255,0.60);
+      font-size: 12px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div id="root"></div>
+  </div>
+
+  <script type="text/babel">
+    /**
+     * DATOS (exactamente los proporcionados por el usuario)
+     */
+    const DATA = {
+      header: {
+        title: "Evolución del Currículo Ecuatoriano (1996–2023)",
+        subtitle: "Interfaz interactiva para explorar hitos históricos y los niveles de concreción curricular."
+      },
+      levelsSection: {
+        title: "Los Niveles de Concreción Curricular",
+        intro: "Antes de entrar en la historia, recordemos cómo se aterriza la teoría a la práctica en el sistema ecuatoriano:",
+        cards: [
+          {
+            level: "Macro",
+            scope: "Ministerio de Educación",
+            description: "Elaborado por el Ministerio de Educación. Es el currículo nacional obligatorio, las políticas generales y los estándares. Es prescriptivo."
+          },
+          {
+            level: "Meso",
+            scope: "Instituciones educativas",
+            description: "Acción de las instituciones educativas. Se traduce en el PEI (Proyecto Educativo Institucional) y el PCI (Planificación Curricular Institucional). Adapta el macrocurrículo al contexto del colegio."
+          },
+          {
+            level: "Micro",
+            scope: "Docente",
+            description: "Responsabilidad exclusiva del docente. Es la Planificación de Unidad Didáctica (PUD). Aquí es donde la magia (o el caos) sucede, adaptando todo a las necesidades reales de los estudiantes en el aula."
+          }
+        ]
+      },
+      milestones: [
+        {
+          year: 1996,
+          eventName: "Reforma Curricular de la Educación Básica (1996)",
+          keyChange: "Fue el primer intento serio de organizar la educación por \"destrezas\".\n\nSe introdujeron las \"Destrezas de aprendizaje\" y los ejes transversales.",
+          impact: "",
+          weakness: "Carecía de una articulación clara entre niveles y los indicadores de evaluación eran demasiado vagos. Era un currículo muy \"romántico\" pero difícil de medir.",
+          levels: ["Macro", "Meso", "Micro"]
+        },
+        {
+          year: 2010,
+          eventName: "Actualización y Fortalecimiento Curricular (2010)",
+          keyChange: "Aquí entramos en la era de la Pedagogía Crítica y el Buen Vivir (Sumak Kawsay).\n\nSe definieron las Destrezas con Criterio de Desempeño (DCD). Se estructuró el currículo por bloques curriculares y se dio mucha importancia a la proyección social.",
+          impact: "El docente dejó de ser un simple transmisor de datos para intentar ser un facilitador de procesos mentales.",
+          weakness: "",
+          levels: ["Macro", "Meso", "Micro"]
+        },
+        {
+          year: 2016,
+          eventName: "Reajuste Curricular (2016)",
+          keyChange: "Este es, quizás, el cambio más técnico y sólido hasta la fecha.\n\nSe introdujo la flexibilidad curricular y se organizó el currículo por áreas de conocimiento. Lo más importante: se definieron los objetivos por subnivel y el Perfil de Salida del Bachiller Ecuatoriano (Justos, Innovadores y Solidarios).\n\nInnovación: Dividió las destrezas en \"Básicas Imprescindibles\" y \"Básicas Deseables\".",
+          impact: "",
+          weakness: "",
+          levels: ["Macro", "Meso", "Micro"]
+        },
+        {
+          year: 2020,
+          eventName: "Currículo Priorizado (2020 - Emergencia Sanitaria)",
+          keyChange: "La pandemia obligó a \"podar\" el árbol educativo para que no se muriera.\n\nSe priorizaron las destrezas esenciales para garantizar la continuidad del aprendizaje en modalidad virtual/híbrida.",
+          impact: "Enfoque: Se centró en la contención emocional y el desarrollo de habilidades autónomas. Pasamos de \"cantidad de contenido\" a \"calidad de habilidades para la vida\".",
+          weakness: "",
+          levels: ["Macro", "Meso", "Micro"]
+        },
+        {
+          year: 2023,
+          eventName: "Currículo por Competencias (2023)",
+          keyChange: "Es la tendencia actual, alineada con marcos internacionales.\n\nEl enfoque se mueve hacia cuatro competencias fundamentales: Comunicacionales, Matemáticas, Digitales y Socioemocionales.\n\nSintesis: No basta con \"saber\" o \"saber hacer\" (destrezas), ahora el énfasis está en la capacidad de integrar esos conocimientos en contextos complejos y digitales.",
+          impact: "",
+          weakness: "",
+          levels: ["Macro", "Meso", "Micro"]
+        }
+      ],
+      comparison: {
+        title: "Comparación y Síntesis",
+        tableTitle: "Característica vs Reformas (1996, 2010, 2016, 2023)",
+        columns: ["Reforma 1996", "Actualización 2010", "Reajuste 2016", "Currículo 2023"],
+        rows: [
+          { metric: "Enfoque principal", v1996: "Contenidos/Destrezas", v2010: "Crítico / Buen Vivir", v2016: "Basado en Procesos", v2023: "Competencias" },
+          { metric: "Flexibilidad", v1996: "Nula (Rígido)", v2010: "Media", v2016: "Alta", v2023: "Muy Alta" },
+          { metric: "Rol del Estudiante", v1996: "Receptor activo", v2010: "Constructor social", v2016: "Investigador", v2023: "Ciudadano Digital" },
+          { metric: "Evaluación", v1996: "Sumativa", v2010: "Criterios de desempeño", v2016: "Indicadores de logro", v2023: "Desempeño integral" }
+        ],
+        synthesisTitle: "Síntesis Final",
+        synthesisText:
+          "La evolución curricular en Ecuador muestra una trayectoria clara: de un modelo vertical y rígido (1996) hacia uno flexible, humano y competencial (2023). Hemos pasado de preocuparnos por qué memoriza el estudiante a cómo usa lo que sabe para resolver problemas en un entorno digital y globalizado. El desafío actual sigue siendo el Tercer Nivel de Concreción: que el docente en el aula tenga los recursos y la formación para que estas \"competencias\" no se queden solo en el papel del Ministerio."
+      }
+    };
+
+    const LEVELS = ["Todos", "Macro", "Meso", "Micro"];
+
+    /* =========================================
+       CHART HELPERS (simples)
+       ========================================= */
+
+    // Mapea texto de flexibilidad a escala ordinal solo para visualización.
+    // 0 = Nula, 1 = Media, 2 = Alta, 3 = Muy Alta
+    function mapFlexToScore(label){
+      const t = (label || "").toLowerCase();
+      if (t.includes("nula")) return 0;
+      if (t.includes("media")) return 1;
+      if (t.includes("alta") && !t.includes("muy")) return 2;
+      if (t.includes("muy alta")) return 3;
+      return null;
+    }
+
+    // Mapea "Enfoque principal" a escala ordinal solo para visualización.
+    // 1 Contenidos/Destrezas, 2 Crítico/Buen Vivir, 3 Procesos, 4 Competencias
+    function mapFocusToScore(label){
+      const t = (label || "").toLowerCase();
+      if (t.includes("contenidos") || t.includes("destrezas")) return 1;
+      if (t.includes("crítico") || t.includes("buen vivir")) return 2;
+      if (t.includes("procesos")) return 3;
+      if (t.includes("competencias")) return 4;
+      return null;
+    }
+
+    function getComparisonRow(metricName){
+      return DATA.comparison.rows.find(r => r.metric === metricName);
+    }
+
+    function Header({title, subtitle}){
+      return (
+        <div className="header">
+          <div className="titleWrap">
+            <h1 className="title">{title}</h1>
+            <p className="subtitle">{subtitle}</p>
+          </div>
+          <div className="pill" title="Interacción disponible">
+            <span className="dot"></span>
+            <span>Timeline, filtros y gráficos</span>
+          </div>
+        </div>
+      );
+    }
+
+    function Tabs({activeLevel, setActiveLevel}){
+      return (
+        <div className="tabs" role="tablist" aria-label="Filtro por nivel de concreción">
+          {LEVELS.map(l => (
+            <button
+              key={l}
+              className={"tab " + (activeLevel === l ? "tabActive" : "")}
+              onClick={() => setActiveLevel(l)}
+              role="tab"
+              aria-selected={activeLevel === l}
+              title="Filtra hitos"
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    function Timeline({milestones, selectedYear, onSelectYear}){
+      return (
+        <div className="timelineWrap">
+          <div className="timeline" aria-label="Timeline de hitos">
+            {milestones.map(m => {
+              const active = selectedYear === m.year;
+              return (
+                <div className="step" key={m.year}>
+                  <button
+                    className={"stepBtn " + (active ? "stepActive" : "")}
+                    onClick={() => onSelectYear(m.year)}
+                    aria-pressed={active}
+                    title="Haz clic para ver detalles"
+                  >
+                    <div className="year">{m.year}</div>
+                    <div className="eventMini">{m.eventName}</div>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    function DetailCards({milestone}){
+      const weakness = (milestone.weakness || "").trim();
+      const impact = (milestone.impact || "").trim();
+
+      return (
+        <div className="cards">
+          <div className="card">
+            <p className="cardLabel">Año</p>
+            <p className="cardValue">{milestone.year}</p>
+            <div className="badgeRow">
+              {(milestone.levels || []).map(l => (
+                <span className="badge" key={l}>{l}</span>
+              ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <p className="cardLabel">Nombre del evento</p>
+            <p className="cardValue">{milestone.eventName}</p>
+          </div>
+
+          <div className="card" style={{gridColumn: "1 / -1"}}>
+            <p className="cardLabel">Cambio clave</p>
+            <p className="cardValue">{milestone.keyChange}</p>
+          </div>
+
+          <div className="card">
+            <p className="cardLabel">Impacto</p>
+            <p className="cardValue">{impact.length ? impact : "No especificado."}</p>
+          </div>
+
+          <div className="card">
+            <p className="cardLabel">Debilidad (si aplica)</p>
+            <p className="cardValue">{weakness.length ? weakness : "No especificado / No aplica."}</p>
+          </div>
+        </div>
+      );
+    }
+
+    function LevelsSection({section}){
+      return (
+        <div className="panel">
+          <div className="panelHeader">
+            <h3 className="panelTitle">{section.title}</h3>
+          </div>
+          <div className="panelBody">
+            <div className="callout" style={{marginBottom: 12}}>
+              <p className="calloutTitle">Contexto</p>
+              <p className="summary">{section.intro}</p>
+            </div>
+
+            <div className="levelCards">
+              {section.cards.map(c => (
+                <div className="levelCard" key={c.level} title="Pasa el cursor para ver el efecto hover">
+                  <div className="levelName">
+                    <strong>{c.level}</strong>
+                    <span className="levelScope">{c.scope}</span>
+                  </div>
+                  <p className="levelDesc">{c.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ComparisonPanel({comparison}){
+      return (
+        <div className="panel">
+          <div className="panelHeader">
+            <h3 className="panelTitle">{comparison.title}</h3>
+          </div>
+          <div className="panelBody">
+            <div className="tableWrap" title="Desplázate horizontalmente si es necesario">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Característica</th>
+                    <th>{comparison.columns[0]}</th>
+                    <th>{comparison.columns[1]}</th>
+                    <th>{comparison.columns[2]}</th>
+                    <th>{comparison.columns[3]}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {comparison.rows.map((r, idx) => (
+                    <tr key={idx}>
+                      <td>{r.metric}</td>
+                      <td>{r.v1996}</td>
+                      <td>{r.v2010}</td>
+                      <td>{r.v2016}</td>
+                      <td>{r.v2023}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{height: 12}}></div>
+
+            <div className="callout">
+              <p className="calloutTitle">{comparison.synthesisTitle}</p>
+              <p className="summary">{comparison.synthesisText}</p>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ChartsPanel(){
+      React.useEffect(() => {
+        const flexRow = getComparisonRow("Flexibilidad");
+        const focusRow = getComparisonRow("Enfoque principal");
+
+        const labels = ["1996", "2010", "2016", "2023"];
+
+        const flexValues = [
+          mapFlexToScore(flexRow?.v1996),
+          mapFlexToScore(flexRow?.v2010),
+          mapFlexToScore(flexRow?.v2016),
+          mapFlexToScore(flexRow?.v2023)
+        ];
+
+        const focusValues = [
+          mapFocusToScore(focusRow?.v1996),
+          mapFocusToScore(focusRow?.v2010),
+          mapFocusToScore(focusRow?.v2016),
+          mapFocusToScore(focusRow?.v2023)
+        ];
+
+        // Valores de ejemplo solicitados para Evaluación
+        const evalValues = [1, 2, 3, 4];
+
+        const flexCanvas = document.getElementById("chartFlex");
+        const focusCanvas = document.getElementById("chartFocus");
+        const evalCanvas = document.getElementById("chartEval");
+
+        if (!flexCanvas || !focusCanvas || !evalCanvas || !window.Chart) return;
+
+        // Limpieza
+        if (window.__chartFlex) window.__chartFlex.destroy();
+        if (window.__chartFocus) window.__chartFocus.destroy();
+        if (window.__chartEval) window.__chartEval.destroy();
+
+        const commonOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: "rgba(10,14,26,0.95)",
+              titleColor: "rgba(255,255,255,0.92)",
+              bodyColor: "rgba(255,255,255,0.86)",
+              borderColor: "rgba(255,255,255,0.10)",
+              borderWidth: 1
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: "rgba(255,255,255,0.75)" },
+              grid: { color: "rgba(255,255,255,0.08)" }
+            },
+            y: {
+              ticks: { color: "rgba(255,255,255,0.75)" },
+              grid: { color: "rgba(255,255,255,0.08)" }
+            }
+          }
+        };
+
+        // Chart 1: Flexibilidad (0 a 3)
+        window.__chartFlex = new Chart(flexCanvas, {
+          type: "bar",
+          data: {
+            labels,
+            datasets: [{
+              label: "Flexibilidad (escala ordinal)",
+              data: flexValues,
+              backgroundColor: [
+                "rgba(74,163,255,0.35)",
+                "rgba(74,163,255,0.45)",
+                "rgba(74,163,255,0.55)",
+                "rgba(74,163,255,0.65)"
+              ],
+              borderColor: "rgba(74,163,255,0.80)",
+              borderWidth: 1,
+              borderRadius: 10
+            }]
+          },
+          options: {
+            ...commonOptions,
+            scales: {
+              ...commonOptions.scales,
+              y: {
+                ...commonOptions.scales.y,
+                min: 0,
+                max: 3,
+                ticks: {
+                  color: "rgba(255,255,255,0.75)",
+                  stepSize: 1,
+                  callback: (v) => {
+                    const map = {0:"Nula",1:"Media",2:"Alta",3:"Muy alta"};
+                    return map[v] ?? v;
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        // Chart 2: Enfoque principal (1 a 4)
+        window.__chartFocus = new Chart(focusCanvas, {
+          type: "line",
+          data: {
+            labels,
+            datasets: [{
+              label: "Enfoque (escala ordinal)",
+              data: focusValues,
+              tension: 0.35,
+              fill: true,
+              backgroundColor: "rgba(45,212,191,0.12)",
+              borderColor: "rgba(45,212,191,0.85)",
+              pointBackgroundColor: "rgba(45,212,191,0.95)",
+              pointRadius: 5
+            }]
+          },
+          options: {
+            ...commonOptions,
+            scales: {
+              ...commonOptions.scales,
+              y: {
+                ...commonOptions.scales.y,
+                min: 1,
+                max: 4,
+                ticks: {
+                  color: "rgba(255,255,255,0.75)",
+                  stepSize: 1,
+                  callback: (v) => {
+                    const map = {
+                      1: "Contenidos/Destrezas",
+                      2: "Crítico/Buen Vivir",
+                      3: "Procesos",
+                      4: "Competencias"
+                    };
+                    return map[v] ? (v + " " + map[v]) : v;
+                  }
+                }
+              }
+            }
+          }
+        });
+
+        // Chart 3: Evaluación (valores de ejemplo 1-4)
+        window.__chartEval = new Chart(evalCanvas, {
+          type: "radar",
+          data: {
+            labels,
+            datasets: [{
+              label: "Evaluación (ejemplo)",
+              data: evalValues,
+              backgroundColor: "rgba(167,139,250,0.14)",
+              borderColor: "rgba(167,139,250,0.85)",
+              pointBackgroundColor: "rgba(167,139,250,0.95)",
+              pointRadius: 4
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: commonOptions.plugins.tooltip
+            },
+            scales: {
+              r: {
+                min: 0,
+                max: 4,
+                ticks: {
+                  stepSize: 1,
+                  color: "rgba(255,255,255,0.75)",
+                  backdropColor: "rgba(0,0,0,0)"
+                },
+                grid: { color: "rgba(255,255,255,0.10)" },
+                angleLines: { color: "rgba(255,255,255,0.10)" },
+                pointLabels: { color: "rgba(255,255,255,0.78)" }
+              }
+            }
+          }
+        });
+
+        return () => {
+          if (window.__chartFlex) window.__chartFlex.destroy();
+          if (window.__chartFocus) window.__chartFocus.destroy();
+          if (window.__chartEval) window.__chartEval.destroy();
+          window.__chartFlex = null;
+          window.__chartFocus = null;
+          window.__chartEval = null;
+        };
+      }, []);
+
+      return (
+        <div className="panel">
+          <div className="panelHeader">
+            <h3 className="panelTitle">Gráficos simples (Chart.js)</h3>
+          </div>
+          <div className="panelBody">
+            <div className="chartsGrid">
+              <div className="chartBox">
+                <p className="chartTitle">Flexibilidad (representación ordinal)</p>
+                <canvas id="chartFlex"></canvas>
+              </div>
+              <div className="chartBox">
+                <p className="chartTitle">Enfoque principal (representación ordinal)</p>
+                <canvas id="chartFocus"></canvas>
+              </div>
+              <div className="chartBox" style={{gridColumn: "1 / -1"}}>
+                <p className="chartTitle">Evaluación (valores de ejemplo: 1996=1, 2010=2, 2016=3, 2023=4)</p>
+                <canvas id="chartEval"></canvas>
+              </div>
+            </div>
+            <p className="note">
+              Nota: “Flexibilidad” y “Enfoque principal” usan una escala ordinal basada en los textos de la tabla. “Evaluación” usa valores de ejemplo (1-4) como solicitaste.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    function App(){
+      const [activeLevel, setActiveLevel] = React.useState("Todos");
+      const [selectedYear, setSelectedYear] = React.useState(DATA.milestones[0]?.year ?? 1996);
+
+      const filteredMilestones = React.useMemo(() => {
+        if (activeLevel === "Todos") return DATA.milestones;
+        return DATA.milestones.filter(m => (m.levels || []).includes(activeLevel));
+      }, [activeLevel]);
+
+      React.useEffect(() => {
+        if (!filteredMilestones.some(m => m.year === selectedYear)) {
+          setSelectedYear(filteredMilestones[0]?.year ?? DATA.milestones[0]?.year);
+        }
+      }, [activeLevel, filteredMilestones, selectedYear]);
+
+      const selectedMilestone = React.useMemo(() => {
+        return DATA.milestones.find(m => m.year === selectedYear) ?? DATA.milestones[0];
+      }, [selectedYear]);
+
+      return (
+        <>
+          <Header title={DATA.header.title} subtitle={DATA.header.subtitle} />
+
+          <div className="grid">
+            <div className="panel">
+              <div className="panelHeader">
+                <h3 className="panelTitle">Timeline interactiva</h3>
+                <Tabs activeLevel={activeLevel} setActiveLevel={setActiveLevel} />
+              </div>
+
+              <Timeline
+                milestones={filteredMilestones}
+                selectedYear={selectedYear}
+                onSelectYear={setSelectedYear}
+              />
+
+              <div className="panelBody">
+                {selectedMilestone ? (
+                  <DetailCards milestone={selectedMilestone} />
+                ) : (
+                  <p className="subtitle">No hay datos disponibles para el filtro seleccionado.</p>
+                )}
+              </div>
+            </div>
+
+            <LevelsSection section={DATA.levelsSection} />
+          </div>
+
+          <div style={{height: 16}}></div>
+
+          <ChartsPanel />
+
+          <div style={{height: 16}}></div>
+
+          <ComparisonPanel comparison={DATA.comparison} />
+        </>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App/>);
+  </script>
+</body>
+</html>
+```
